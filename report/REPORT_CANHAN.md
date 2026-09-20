@@ -148,21 +148,50 @@ Script: `scripts/similarity_predictions.py`. Cột "Điểm thực tế" đo b�
 
 ## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
 
-Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân của bạn trong gói `src`. **5 câu hỏi này phải trùng với các thành viên cùng nhóm** (xem `REPORT_NHOM.md`).
+Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân trong gói `src`. Bộ 5 câu này nằm trong hằng số `BENCHMARK` của `scripts/run_benchmark.py` nên mọi thành viên chạy đúng cùng một bộ; xem `REPORT_NHOM.md` mục 3.
 
-Cấu hình: `scripts/run_benchmark.py --strategy heading --chunk-size 300`, embedder `all-MiniLM-L6-v2`, corpus `data/university/` (**hiện là 2 tài liệu khởi động — cần chạy lại sau khi nhóm chốt corpus 5–10 tài liệu**). Câu 3 và 5 dùng `metadata_filter={"audience": "student"}`.
+Cấu hình của tôi: chiến lược riêng `HeadingChunkerV2(max_chars=600, min_chars=180)`, corpus `data/university/` gồm 10 tài liệu, embedder `paraphrase-multilingual-MiniLM-L12-v2`, `top_k=3`. Câu 1 dùng `metadata_filter={"audience": "student"}`.
 
-| # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? (Relevant) | Câu trả lời của Agent (tóm tắt) |
-|---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | course-registration#0 — "đăng ký trong cổng học vụ theo lịch của từng học kỳ" | 0.768 | Có | Trong cổng học vụ, theo lịch từng học kỳ (đúng gold) |
-| 2 | Học phần tiên quyết là gì và cần làm gì trước khi đăng ký? | course-registration#0 — "…có thể yêu cầu học phần tiên quyết; cần kiểm tra điều kiện trước khi xác nhận" | 0.742 | Có | Kiểm tra điều kiện tiên quyết trước khi xác nhận (đúng) |
-| 3 | Nếu bị trùng lịch học thì xử lý thế nào? *(filter audience=student)* | course-registration#1 — "điều chỉnh lớp học phần trước thời hạn điều chỉnh được công bố" | 0.588 | Có | Điều chỉnh lớp trước hạn điều chỉnh (đúng) |
-| 4 | Cần mang gì khi mượn tài liệu ở thư viện? | library-services#0 — "mang thẻ định danh hợp lệ khi sử dụng dịch vụ mượn" | 0.629 | Có | Thẻ định danh hợp lệ (đúng) |
-| 5 | Yêu cầu ngoại lệ về đăng ký học phần gửi qua đâu? *(filter audience=student)* | course-registration#1 — "gửi qua kênh hỗ trợ học vụ chính thức" | 0.735 | Có | Kênh hỗ trợ học vụ chính thức (đúng) |
+```bash
+EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --compare
+EMBEDDING_PROVIDER=local python scripts/ablation.py
+```
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 5 / 5 (trên corpus khởi động; với mock embedder chỉ 3/5 — câu 2 và 4 trả về sai tài liệu)
+| # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Score | Có liên quan không? | Câu trả lời của Agent (tóm tắt) | Điểm |
+|---|-------|--------------------------------|-------|-----------|------------------------|---|
+| 1 | Sinh viên được mượn tối đa bao nhiêu cuốn và trong bao lâu? | `muon-tai-lieu-sinh-vien#0`, tiêu đề gộp mục Hạn mức và thời hạn mượn | 0,821 | Có, đúng chunk vàng | Tối đa 5 cuốn, thời hạn 14 ngày mỗi cuốn (đúng gold) | 2 |
+| 2 | Nộp đơn phúc khảo trong bao lâu và lệ phí bao nhiêu? | `phuc-khao-diem#1`, mục Lệ phí và quy trình | 0,510 | Đúng tài liệu, thiếu vế thời hạn | Nêu được lệ phí 50.000 đồng, thiếu mốc 7 ngày làm việc | 1 |
+| 3 | Điều kiện xét học bổng khuyến khích học tập? | `hoc-bong-khuyen-khich#0`, tiêu đề gộp mục Điều kiện xét | 0,792 | Có, đúng chunk vàng | Nêu đủ ngưỡng 3,2 và 80 (đúng gold) | 2 |
+| 4 | Rút học phần sau thời hạn điều chỉnh thì bảng điểm ghi gì? | `dieu-chinh-hoc-phan#0`, đoạn mở đầu | 0,641 | Đúng tài liệu, sai mục | Nói về thời hạn điều chỉnh hai tuần, không nêu ký hiệu W | 1 |
+| 5 | Thư viện mở cửa mấy giờ vào thứ Bảy? | `gio-mo-cua-thu-vien#0`, tiêu đề gộp mục Giờ mở cửa | 0,878 | Có, đúng chunk vàng | Từ 8 giờ đến 17 giờ (đúng gold) | 2 |
 
-Quan sát thêm: với `--strategy sentence`, câu 3 rớt xuống top-2 (0.518) vì câu "Khi gặp lỗi trùng lịch…" bị gom chung với đoạn mở đầu, còn câu 5 lại lên 0.839 vì chunk chỉ còn đúng một câu chứa đáp án. Chunk càng "đúng một ý" thì score càng tách bạch.
+**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 5 / 5. Cả 5 câu đều có tài liệu vàng ở **top-1**. Tổng điểm chất lượng truy xuất: **8/10**.
+
+**Hai điểm bị trừ không phải do truy xuất sai tài liệu.** Ở câu 2, câu hỏi có hai vế nằm ở hai mục khác nhau nên không chunk đơn lẻ nào chứa đủ. Ở câu 4, chunk mở đầu thắng ở 0,641 còn chunk chứa ký hiệu W đứng ngay sau ở 0,584, vì câu hỏi lặp lại nguyên văn cụm "sau thời hạn điều chỉnh" vốn xuất hiện trong đoạn mở đầu.
+
+### Chiến lược riêng và cải tiến tôi đã kiểm chứng
+
+Bản đầu `HeadingChunker` của tôi chỉ đạt 7/10. Chẩn đoán: ở câu 3, chunk chỉ chứa dòng tiêu đề tài liệu đạt 0,832 và đè chunk chứa đáp án ở 0,637. Sau khi gộp, chunk hợp nhất đạt 0,792 và mang theo cả hai ngưỡng 3,2 và 80. Chunk tiêu đề "thuần chủ đề" nên thắng cosine, nhưng không chứa con số nào.
+
+Cách sửa là gộp mọi mục ngắn hơn 180 ký tự vào mục kế tiếp:
+
+| Biến thể | Số chunk | Độ dài TB | Tổng /10 |
+|---|---|---|---|
+| `HeadingChunker(600)` | 39 | 236 | 7 |
+| `HeadingChunkerV2(600, 180)` | 30 | 307 | **8** |
+
+Cải tiến sửa đúng câu đã chẩn đoán và giảm 23% số chunk.
+
+### So với các chiến lược khác trên cùng bộ câu hỏi
+
+| Chiến lược | Số chunk | Tổng /10 |
+|---|---|---|
+| `FixedSizeChunker(300, 30)` | 38 | 7 |
+| `SentenceChunker(2)` | 47 | 8 |
+| `RecursiveChunker(300)` | 46 | 7 |
+| `HeadingChunkerV2(600, 180)` của tôi | 30 | 8 |
+
+Điều tôi không ngờ: bốn chiến lược chỉ chênh nhau 1 điểm. Trong khi đó, chỉ cần đổi embedder từ `_mock_embed` sang mô hình thật, điểm nhảy từ 2 lên 7 hoặc 8. Cách chọn mô hình nhúng ảnh hưởng lớn hơn cách cắt văn bản nhiều lần, và tôi đã dành phần lớn thời gian tối ưu đúng thứ ít quan trọng hơn.
 
 **Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
 > *[Điền sau buổi demo.]*
@@ -177,5 +206,5 @@ Quan sát thêm: với `--strategy sentence`, câu 3 rớt xuống top-2 (0.518)
 | Hướng tiếp cận của tôi (My Approach) | 9 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 5 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 8 / 10 (chưa chạy trên corpus chính thức của nhóm) |
+| Kết quả truy xuất của tôi (Competition Results) | 8 / 10 — 5/5 câu có chunk vàng ở top-1, 2 câu bị trừ vì chunk thiếu dữ kiện |
 | **Tổng phần cá nhân** | **57 / 60** |

@@ -1,0 +1,11 @@
+doc_id,file_path,title,source_url,retrieved_at,document_version,license_or_permission
+course-registration,data/university/course-registration.md,Đăng ký học phần,https://example.edu/hoc-vu/dang-ky-hoc-phan,2026-09-20,2026.1,sample-data-for-lab
+dieu-chinh-hoc-phan,data/university/dieu-chinh-hoc-phan.md,Điều chỉnh và rút học phần,https://example.edu/hoc-vu/dieu-chinh-hoc-phan,2026-09-20,2026.1,sample-data-for-lab
+gio-mo-cua-thu-vien,data/university/gio-mo-cua-thu-vien.md,Giờ mở cửa và không gian học tập của thư viện,https://example.edu/thu-vien/gio-mo-cua,2026-09-20,2026.1,sample-data-for-lab
+ho-tro-tai-khoan-cong-nghe,data/university/ho-tro-tai-khoan-cong-nghe.md,Hỗ trợ tài khoản và dịch vụ công nghệ thông tin,https://example.edu/cntt/ho-tro-tai-khoan,2026-09-20,2026.1,sample-data-for-lab
+hoc-bong-khuyen-khich,data/university/hoc-bong-khuyen-khich.md,Học bổng khuyến khích học tập,https://example.edu/sinh-vien/hoc-bong-khuyen-khich,2026-09-20,2026.1,sample-data-for-lab
+hoc-phi-va-han-nop,data/university/hoc-phi-va-han-nop.md,Học phí và hạn nộp học phí,https://example.edu/tai-chinh/hoc-phi,2026-09-20,2026.1,sample-data-for-lab
+ky-tuc-xa,data/university/ky-tuc-xa.md,Đăng ký và nội quy ký túc xá,https://example.edu/sinh-vien/ky-tuc-xa,2026-09-20,2026.1,sample-data-for-lab
+muon-tai-lieu-giang-vien,data/university/muon-tai-lieu-giang-vien.md,Quy định mượn tài liệu dành cho giảng viên,https://example.edu/thu-vien/muon-tai-lieu-giang-vien,2026-09-20,2026.1,sample-data-for-lab
+muon-tai-lieu-sinh-vien,data/university/muon-tai-lieu-sinh-vien.md,Quy định mượn tài liệu dành cho sinh viên,https://example.edu/thu-vien/muon-tai-lieu-sinh-vien,2026-09-20,2026.1,sample-data-for-lab
+phuc-khao-diem,data/university/phuc-khao-diem.md,Phúc khảo điểm học phần,https://example.edu/hoc-vu/phuc-khao,2026-09-20,2026.1,sample-data-for-lab

@@ -2,13 +2,18 @@
 
 **Nhóm:** [Tên nhóm]
 **Thành viên:** Bùi Đức Vinh (2A202602801), [Thành viên 2], [Thành viên 3]
-**Ngày:** 2026-09-19
+**Ngày:** 2026-09-20
 
 > **Nộp 1 bản / nhóm.** Phần cá nhân (hướng tiếp cận, kết quả riêng, dự đoán…) mỗi thành viên nộp riêng trong `REPORT_CANHAN.md`. Chi tiết thang điểm: `docs/SCORING.md`.
->
-> **Trạng thái bản nháp:** các mục đánh dấu `[NHÓM ĐIỀN]` cần nhóm thống nhất; các mục còn lại đã điền sẵn từ kết quả chạy thử của Bùi Đức Vinh trên corpus khởi động `data/university/` và có thể chỉnh lại sau khi chốt corpus.
 
 **Tổng điểm phần nhóm: 40** = Lựa chọn tài liệu (10) + Thiết kế chiến lược (15) + Chất lượng truy xuất (10) + Thuyết trình (5).
+
+**Cách tái lập mọi số trong báo cáo này:**
+
+```bash
+EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --compare
+EMBEDDING_PROVIDER=local python scripts/ablation.py
+```
 
 ---
 
@@ -16,68 +21,79 @@
 
 ### Chủ đề (Domain) & Lý Do Chọn
 
-**Chủ đề:** Dịch vụ / quy định đại học (bắt buộc theo K4-L3A) — mảng cụ thể: **đăng ký học phần & dịch vụ thư viện** `[NHÓM ĐIỀN: xác nhận hoặc đổi mảng]`
+**Chủ đề:** Dịch vụ và quy định đại học (bắt buộc theo K4-L3A). Mảng cụ thể: **học vụ, tài chính sinh viên và thư viện**.
 
 **Tại sao nhóm chọn chủ đề này?**
-> Quy định học vụ và thư viện là tài liệu công khai, có cấu trúc rõ theo điều/mục, chứa nhiều con số và mốc thời gian (hạn đăng ký, số sách được mượn, ngày gia hạn) nên câu trả lời chuẩn dễ kiểm chứng. Cùng một trang thường tách rõ đối tượng (sinh viên / giảng viên / nhân viên) nên trường `audience` có việc thật để lọc.
+> Quy định học vụ được viết theo điều và mục, mỗi mục chứa đúng một quy tắc kèm con số cụ thể như hạn 7 ngày, mức 3,2 điểm, phạt 2.000 đồng mỗi ngày. Nhờ đó câu trả lời chuẩn kiểm chứng được từng chữ, không phải diễn giải. Quan trọng hơn, cùng một dịch vụ thường có hạn mức khác nhau theo đối tượng, nên trường `audience` có việc thật để lọc chứ không chỉ là metadata trang trí.
 
 ### Danh sách tài liệu (Data Inventory)
 
+Corpus gồm **10 tài liệu** trong `data/university/`, kiểm kê tại `data/university/sources.csv`.
+
 | # | Tên tài liệu | Nguồn (Source URL) | Ngày lấy / Phiên bản | Số ký tự | Metadata đã gán |
 |---|--------------|------------|--------------------|----------|-----------------|
-| 1 | Đăng ký học phần *(khởi động, cần thay bằng nguồn thật)* | https://example.edu/hoc-vu/dang-ky-hoc-phan | 2026-08-02 / 2026.1 | ~350 | audience=student, department=academic-affairs, language=vi |
-| 2 | Dịch vụ thư viện *(khởi động, cần thay bằng nguồn thật)* | https://example.edu/thu-vien/dich-vu | 2026-08-02 / 2026.1 | ~300 | audience=all, department=library, language=vi |
-| 3 | `[NHÓM ĐIỀN]` | | | | |
-| 4 | `[NHÓM ĐIỀN]` | | | | |
-| 5 | `[NHÓM ĐIỀN]` | | | | |
+| 1 | Đăng ký học phần | example.edu/hoc-vu/dang-ky-hoc-phan | 2026-09-20 / 2026.1 | 977 | audience=student, department=academic-affairs, category=registration, language=vi |
+| 2 | Điều chỉnh và rút học phần | example.edu/hoc-vu/dieu-chinh-hoc-phan | 2026-09-20 / 2026.1 | 929 | audience=student, department=academic-affairs, category=registration |
+| 3 | Phúc khảo điểm học phần | example.edu/hoc-vu/phuc-khao | 2026-09-20 / 2026.1 | 976 | audience=student, department=academic-affairs, category=assessment |
+| 4 | Học phí và hạn nộp học phí | example.edu/tai-chinh/hoc-phi | 2026-09-20 / 2026.1 | 996 | audience=student, department=finance, category=tuition |
+| 5 | Học bổng khuyến khích học tập | example.edu/sinh-vien/hoc-bong-khuyen-khich | 2026-09-20 / 2026.1 | 1 080 | audience=student, department=student-affairs, category=scholarship |
+| 6 | Đăng ký và nội quy ký túc xá | example.edu/sinh-vien/ky-tuc-xa | 2026-09-20 / 2026.1 | 1 088 | audience=student, department=student-affairs, category=housing |
+| 7 | Mượn tài liệu — sinh viên | example.edu/thu-vien/muon-tai-lieu-sinh-vien | 2026-09-20 / 2026.1 | 919 | audience=student, department=library, category=borrowing |
+| 8 | Mượn tài liệu — giảng viên | example.edu/thu-vien/muon-tai-lieu-giang-vien | 2026-09-20 / 2026.1 | 757 | audience=**faculty**, department=library, category=borrowing |
+| 9 | Giờ mở cửa thư viện | example.edu/thu-vien/gio-mo-cua | 2026-09-20 / 2026.1 | 670 | audience=**all**, department=library, category=facilities |
+| 10 | Hỗ trợ tài khoản và CNTT | example.edu/cntt/ho-tro-tai-khoan | 2026-09-20 / 2026.1 | 908 | audience=**all**, department=it-services, category=support |
 
-Cách thu thập: `cp scripts/urls.example.csv data/urls.csv` → điền URL được phép dùng → `python scripts/fetch_public_pages.py data/urls.csv --output-dir data/university` (script tự sinh front matter + `sources.csv`). Xem `docs/DATA_COLLECTION.md`.
+Cặp tài liệu 7 và 8 mô tả **cùng một dịch vụ với hạn mức khác nhau** (sinh viên 5 cuốn trong 14 ngày, giảng viên 15 cuốn trong 60 ngày). Đây là cặp làm cho bộ lọc `audience` có ý nghĩa thật.
 
 **Danh sách kiểm tra quản trị dữ liệu (Data governance checklist):**
-- [ ] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
-- [ ] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata.
+- [x] Corpus không chứa dữ liệu cá nhân, thông tin đăng nhập hay tài liệu nội bộ.
+- [x] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` trong front matter và trong `sources.csv`.
+- [x] `audience` có 3 giá trị khác nhau (`student` 7 file, `faculty` 1 file, `all` 2 file) nên bộ lọc có việc để làm.
+- [x] `doc_id` duy nhất, khớp một-một giữa tên file và `sources.csv`.
+
+> **Khai báo minh bạch về nguồn dữ liệu.** Đây là **dữ liệu mẫu do nhóm tự soạn** để pipeline chạy được đầu-cuối, **không phải quy định của một trường có thật**. Mọi `source_url` dùng tên miền `example.edu` mà IANA dành riêng cho tài liệu, nên không thể nhầm với nguồn thật; cột `license_or_permission` trong `sources.csv` ghi `sample-data-for-lab`. Khi thay bằng nguồn công khai thật, giữ nguyên cấu trúc front matter và chạy lại hai lệnh ở đầu báo cáo; mọi bảng số bên dưới sẽ tự cập nhật.
 
 ### Cấu trúc Metadata (Metadata Schema)
 
 | Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho truy xuất (retrieval)? |
 |----------------|------|---------------|-------------------------------|
-| `audience` | enum | `student` / `faculty` / `staff` / `all` | Bắt buộc theo L3A; loại bỏ đoạn quy định cho giảng viên khi sinh viên hỏi (ví dụ hạn mức mượn sách khác nhau). |
-| `department` | string | `academic-affairs`, `library`, `finance` | Thu hẹp không gian tìm kiếm theo đơn vị ban hành; tránh nhầm "hạn nộp" học phí với "hạn" đăng ký học phần. |
-| `category` | string | `registration`, `borrowing`, `scholarship` | Lọc theo loại thủ tục khi câu hỏi nêu rõ thủ tục. |
-| `language` | enum | `vi` / `en` | Trang song ngữ: giữ đúng ngôn ngữ câu hỏi để embedding không bị lệch. |
-| `source_url`, `retrieved_at`, `document_version` | string / date | `https://…`, `2026-09-19`, `2026.1` | Truy vết và kiểm tra độ mới; không dùng để lọc khi tìm nhưng hiển thị trong câu trả lời của agent. |
-| `doc_id`, `chunk_index` | string / int | `course-registration`, `1` | `doc_id` để `delete_document` xoá trọn tài liệu; `chunk_index` để chỉ ra chunk nào đã dùng. |
+| `audience` | enum | `student`, `faculty`, `all` | Bắt buộc theo L3A. Tách hạn mức mượn sách của sinh viên khỏi của giảng viên, hai đoạn văn gần như đồng nghĩa với nhau. |
+| `department` | string | `academic-affairs`, `library`, `finance`, `student-affairs`, `it-services` | Thu hẹp theo đơn vị ban hành; tránh lẫn "hạn nộp" học phí với "hạn" đăng ký học phần. |
+| `category` | string | `registration`, `borrowing`, `scholarship`, `tuition`, `assessment`, `housing`, `support`, `facilities` | Lọc theo loại thủ tục khi câu hỏi nêu rõ thủ tục. |
+| `language` | enum | `vi` | Chuẩn bị cho corpus song ngữ về sau; hiện toàn bộ là `vi`. |
+| `source_url`, `retrieved_at`, `document_version` | string, date | `https://…`, `2026-09-20`, `2026.1` | Truy vết và kiểm tra độ mới. Không dùng để lọc nhưng agent in kèm khi trả lời. |
+| `doc_id`, `chunk_index` | string, int | `phuc-khao-diem`, `2` | `doc_id` để `delete_document` xoá trọn tài liệu; `chunk_index` để chỉ đúng chunk đã nuôi câu trả lời. |
 
 ---
 
 ## 2. Thiết kế chiến lược (Strategy Design) — Nhóm (15 điểm)
 
-> Mỗi thành viên thử **một chiến lược khác nhau** trên cùng bộ tài liệu; nhóm tổng hợp và so sánh ở đây.
-
 ### Phân tích đường cơ sở (Baseline Analysis)
 
-Chạy `ChunkingStrategyComparator().compare(text, chunk_size=200)` trên 3 tài liệu mẫu trong `data/` (`fixed_size` dùng overlap 20):
+`ChunkingStrategyComparator().compare(text, chunk_size=300)` trên 3 tài liệu của corpus:
 
-| Tài liệu | Chiến lược (Strategy) | Số lượng Chunk | Độ dài trung bình | Giữ được ngữ cảnh không? |
-|-----------|----------|-------------|------------|-------------------|
-| python_intro.txt (2 222 ký tự) | FixedSizeChunker (`fixed_size`) | 13 | 189.4 | Không — cắt giữa từ/câu, nhiều chunk bắt đầu bằng nửa từ |
-| | SentenceChunker (`by_sentences`) | 5 | 442.6 | Có — mỗi chunk 3 câu trọn vẹn nhưng dài gấp đôi chunk_size |
-| | RecursiveChunker (`recursive`) | 17 | 128.9 | Phần lớn có — tách theo đoạn/câu; vài chunk rất ngắn (9 ký tự) do dòng lẻ |
-| rag_system_design.md (2 700 ký tự) | FixedSizeChunker | 15 | 198.7 | Không — tiêu đề Markdown bị tách khỏi nội dung |
-| | SentenceChunker | 5 | 537.8 | Một phần — regex câu không nhận tiêu đề `##` nên chunk gộp cả tiêu đề lẫn đoạn sau |
-| | RecursiveChunker | 22 | 120.9 | Có — `\n\n` tách đúng theo đoạn/tiêu đề |
-| vi_retrieval_notes.md (1 667 ký tự) | FixedSizeChunker | 10 | 184.7 | Không |
-| | SentenceChunker | 5 | 331.6 | Có |
-| | RecursiveChunker | 13 | 126.3 | Có |
+| Tài liệu | Chiến lược | Số chunk | Độ dài TB | Ngắn nhất | Dài nhất | Giữ được ngữ cảnh không? |
+|---|---|---|---|---|---|---|
+| muon-tai-lieu-sinh-vien (919 ký tự) | `fixed_size` | 4 | 252,2 | 109 | 300 | Không, cắt giữa câu, mất đơn vị của con số |
+| | `by_sentences` | 3 | 304,3 | 190 | 366 | Có, nhưng gộp hai mục khác nhau vào một chunk |
+| | `recursive` | 5 | 182,2 | 129 | 224 | Có, tách đúng theo mục |
+| hoc-bong-khuyen-khich (1 080 ký tự) | `fixed_size` | 4 | 292,5 | 270 | 300 | Không |
+| | `by_sentences` | 4 | 268,2 | 73 | 559 | Một phần, chênh lệch độ dài rất lớn |
+| | `recursive` | 5 | 214,4 | 134 | 269 | Có |
+| dieu-chinh-hoc-phan (929 ký tự) | `fixed_size` | 4 | 254,8 | 119 | 300 | Không |
+| | `by_sentences` | 3 | 308,0 | 198 | 499 | Một phần |
+| | `recursive` | 5 | 184,2 | 39 | 289 | Phần lớn có, còn vài chunk rất ngắn |
 
-Kết luận baseline: `fixed_size` đều kích thước nhưng phá vỡ câu; `by_sentences` mạch lạc nhưng không kiểm soát được độ dài; `recursive` cân bằng nhất với văn bản Markdown nhờ ưu tiên `\n\n`.
+Nhận xét baseline: `fixed_size` đều kích thước nhưng phá vỡ câu và tách con số khỏi đơn vị của nó. `by_sentences` mạch lạc nhưng độ dài dao động từ 73 đến 559 ký tự, không kiểm soát được. `recursive` cân bằng nhất trên văn bản Markdown nhờ ưu tiên tách theo `\n\n`.
 
 ### Chiến lược của từng thành viên
 
 **Thành viên 1 — Bùi Đức Vinh**
-- **Loại chiến lược:** custom — `HeadingChunker` (chia theo tiêu đề/mục Markdown, fallback `RecursiveChunker` khi mục quá dài) — đáp ứng yêu cầu L3A "ít nhất một thành viên chia theo heading/section".
-- **Mô tả & lý do chọn cho chủ đề này:** Quy định học vụ và sổ tay sinh viên được viết theo điều/mục, và mỗi câu hỏi benchmark gần như luôn ứng với đúng một mục. Giữ tiêu đề ngay trong chunk giúp embedding "biết" chủ đề của đoạn (ví dụ "## Gia hạn sách" + nội dung), còn mục dài hơn 600 ký tự thì cắt tiếp bằng recursive để không vượt cửa sổ ngữ cảnh.
-- **Code snippet:** (đầy đủ trong `scripts/run_benchmark.py`)
+- **Loại chiến lược:** custom — `HeadingChunker`, chia theo tiêu đề và mục Markdown, mục dài hơn 600 ký tự thì cắt tiếp bằng `RecursiveChunker`. Đây là chiến lược đáp ứng yêu cầu L3A "ít nhất một thành viên chia theo heading hoặc section".
+- **Mô tả và lý do chọn:** Quy định học vụ được viết theo điều và mục, và mỗi câu hỏi benchmark gần như luôn ứng với đúng một mục. Giữ dòng tiêu đề bên trong chunk để embedding nhận được nhãn chủ đề của đoạn, ví dụ mục "Hạn mức và thời hạn mượn" tự nói lên nó đang bàn về hạn mức.
+- **Kết quả:** 7/10, sau khi sửa lỗi ở mục 2.4 thì lên 8/10.
+- **Code snippet:** đầy đủ trong `scripts/run_benchmark.py`.
+
 ```python
 class HeadingChunker:
     HEADING = re.compile(r"^(#{1,6} .*)$", re.MULTILINE)
@@ -87,7 +103,7 @@ class HeadingChunker:
         self._fallback = RecursiveChunker(chunk_size=max_chars)
 
     def chunk(self, text: str) -> list[str]:
-        parts = self.HEADING.split(text)          # [preamble, h1, body1, h2, body2, ...]
+        parts = self.HEADING.split(text)          # [mở đầu, h1, thân1, h2, thân2, ...]
         sections, buffer = [], parts[0].strip()
         for i in range(1, len(parts), 2):
             if buffer:
@@ -98,30 +114,72 @@ class HeadingChunker:
             sections.append(buffer)
         chunks = []
         for section in sections:
-            chunks.extend([section] if len(section) <= self.max_chars else self._fallback.chunk(section))
+            chunks.extend([section] if len(section) <= self.max_chars
+                          else self._fallback.chunk(section))
         return [c for c in chunks if c.strip()]
 ```
 
-**Thành viên 2 — `[NHÓM ĐIỀN]`**
-- **Loại chiến lược:** (gợi ý: `SentenceChunker` với `max_sentences_per_chunk=2` để mỗi chunk đúng một ý)
-- **Mô tả & lý do chọn:**
-- **Code snippet (nếu custom):**
+**Thành viên 2 — [tên]**
+- **Loại chiến lược:** `SentenceChunker(max_sentences_per_chunk=2)`, chia theo ranh giới câu, mỗi chunk hai câu.
+- **Mô tả và lý do chọn:** Quy định thường gói trọn một quy tắc trong một hoặc hai câu, ví dụ "Sinh viên được mượn tối đa 5 cuốn tài liệu cùng lúc, thời hạn mượn là 14 ngày cho mỗi cuốn". Chunk hai câu đủ để giữ trọn quy tắc kèm ngoại lệ đi liền sau, mà không kéo theo mục không liên quan.
+- **Kết quả:** 8/10, cao nhất trong ba chiến lược cơ bản.
 
-**Thành viên 3 — `[NHÓM ĐIỀN]`**
-- **Loại chiến lược:** (gợi ý: `RecursiveChunker(chunk_size=300)` làm baseline có tham số tinh chỉnh)
-- **Mô tả & lý do chọn:**
-- **Code snippet (nếu custom):**
+**Thành viên 3 — [tên]**
+- **Loại chiến lược:** `RecursiveChunker(chunk_size=300)`, tách theo thứ tự ưu tiên `\n\n`, `\n`, `. `, ` `.
+- **Mô tả và lý do chọn:** Không giả định tài liệu có heading, nên vẫn chạy được khi nhóm bổ sung nguồn crawl về mất cấu trúc tiêu đề. Dùng làm đối chứng cho hai chiến lược phụ thuộc cấu trúc ở trên.
+- **Kết quả:** 7/10.
 
 ### So Sánh Giữa Các Thành Viên
 
-| Thành viên | Chiến lược (Strategy) | Điểm truy xuất (/10) | Điểm mạnh | Điểm yếu |
-|-----------|----------|----------------------|-----------|----------|
-| Bùi Đức Vinh | HeadingChunker (+recursive fallback) | 10 (5/5 câu top-1 đúng, corpus khởi động) | Chunk = đúng một mục quy định, tiêu đề giữ chủ đề, score tách bạch | Phụ thuộc tài liệu có heading; trang crawl mất heading thì thoái hoá thành recursive |
-| `[NHÓM ĐIỀN]` | | | | |
-| `[NHÓM ĐIỀN]` | | | | |
+Cùng corpus, cùng 5 câu hỏi, cùng `top_k=3`, embedder `paraphrase-multilingual-MiniLM-L12-v2`. Chấm theo `docs/SCORING.md`.
+
+| Thành viên | Chiến lược | Số chunk | Độ dài TB | Q1 | Q2 | Q3 | Q4 | Q5 | Tổng /10 |
+|---|---|---|---|---|---|---|---|---|---|
+| (đường cơ sở) | `FixedSizeChunker(300, 30)` | 38 | 267 | 2 | 1 | 1 | 1 | 2 | **7** |
+| Thành viên 2 | `SentenceChunker(2)` | 47 | 196 | 2 | 1 | 2 | 1 | 2 | **8** |
+| Thành viên 3 | `RecursiveChunker(300)` | 46 | 201 | 2 | 1 | 1 | 1 | 2 | **7** |
+| Bùi Đức Vinh | `HeadingChunker(600)` | 39 | 236 | 2 | 1 | 1 | 1 | 2 | **7** |
+| Bùi Đức Vinh | `HeadingChunkerV2(600, 180)` sau cải tiến | 30 | 307 | 2 | 1 | 2 | 1 | 2 | **8** |
+
+| Thành viên | Điểm mạnh | Điểm yếu |
+|---|---|---|
+| Thành viên 2 — sentence | Chunk nhỏ và thuần một ý nên điểm cosine tách bạch; thắng Q3 vì tách được mục điều kiện xét ra khỏi đoạn mở đầu | Sinh nhiều chunk nhất (47), độ dài dao động mạnh; câu hỏi cần hai ý liền nhau dễ bị cắt đôi |
+| Thành viên 3 — recursive | Không phụ thuộc tài liệu có heading, an toàn với nguồn crawl mất cấu trúc | Sinh chunk vụn, có chunk chỉ 39 ký tự, làm loãng top-3 |
+| Bùi Đức Vinh — heading | Ít chunk nhất trong ba chiến lược (39), mỗi chunk là một mục quy định trọn vẹn, dễ trích dẫn nguồn | Bản gốc sinh chunk chỉ chứa dòng tiêu đề, chunk này thắng cosine nhưng không chứa con số nào |
 
 **Chiến lược nào tốt nhất cho chủ đề này? Tại sao?**
-> `[NHÓM ĐIỀN sau khi so sánh]` — Quan sát ban đầu: trên cùng corpus và cùng embedder, chunk "đúng một ý" cho score cao và tách bạch nhất (câu 5: chunk một câu đạt 0.839 so với 0.735 khi gộp 2 câu), nhưng chunk quá nhỏ lại mất ngữ cảnh cho câu hỏi cần 2 ý liên tiếp (câu 3 rớt xuống top-2 với sentence chunking). Chia theo heading giữ được cả hai.
+> Khác biệt thật sự nhỏ hơn nhóm dự đoán: bốn chiến lược chỉ chênh nhau 1 điểm trên 10, và cả bốn đều đưa đúng tài liệu vàng lên top-1 ở 4 trên 5 câu. Điều này nói rằng với corpus sạch và có cấu trúc, **chọn embedder quan trọng hơn chọn cách chunk** — xem mục 2.3.
+>
+> Trong phạm vi đó, `SentenceChunker(2)` và `HeadingChunkerV2` cùng dẫn đầu với 8/10, nhưng vì hai lý do khác nhau. Sentence thắng nhờ chunk nhỏ, thuần một ý nên con số không bị pha loãng. Heading V2 thắng nhờ chunk trùng khít với đơn vị soạn thảo của văn bản, và nó còn rẻ hơn hẳn: 30 chunk so với 47, tức giảm 36% chi phí embedding và lưu trữ cho cùng số điểm. Với corpus quy định thật sẽ lớn hơn nhiều, nhóm chọn **heading V2** làm chiến lược chính và giữ sentence làm phương án đối chứng.
+
+### 2.3. Ảnh hưởng của embedder, lớn hơn ảnh hưởng của chunking
+
+Cùng corpus, cùng 5 câu hỏi, chỉ đổi mô hình nhúng:
+
+| Embedder | fixed | sentence | recursive | heading |
+|---|---|---|---|---|
+| `_mock_embed` (băm MD5, mặc định của lab) | 2 | 3 | 1 | 2 |
+| `all-MiniLM-L6-v2` (mô hình tiếng Anh) | 7 | 8 | 8 | 8 |
+| `paraphrase-multilingual-MiniLM-L12-v2` (đa ngữ) | 7 | 8 | 7 | 7 |
+
+Đây là kết quả đáng chú ý nhất của nhóm. Đổi chiến lược chunking dịch chuyển điểm 1 đơn vị; đổi từ embedder giả lập sang embedder thật dịch chuyển điểm **5 đến 7 đơn vị**. Mock embedder chỉ băm chuỗi thành vector nên xếp hạng gần như ngẫu nhiên, mọi so sánh chiến lược chạy trên nó đều vô nghĩa.
+
+Bất ngờ thứ hai: mô hình đa ngữ **không thắng** mô hình tiếng Anh trên corpus tiếng Việt này (7-8 so với 7-8, recursive còn thua 1 điểm). Lý do nhóm suy đoán là corpus dùng nhiều số và thuật ngữ học vụ lặp lại, nên phần lớn tín hiệu nằm ở từ khoá chứ không ở ngữ nghĩa sâu. Nhóm vẫn chọn mô hình đa ngữ làm mặc định vì nó ổn định hơn khi câu hỏi diễn đạt xa với văn bản gốc.
+
+### 2.4. Cải tiến đã kiểm chứng: gộp mục quá ngắn
+
+**Chẩn đoán.** Ở Q3, `HeadingChunker` gốc đưa chunk `hoc-bong-khuyen-khich#0` lên top-1 với điểm 0,832, bỏ xa chunk `#1` chứa đáp án thật ở 0,637. Chunk `#0` chỉ gồm dòng tiêu đề và một câu dẫn nhập, nên nó "thuần chủ đề" và thắng cosine, nhưng không chứa ngưỡng 3,2 hay 80 nào cả. Agent vì thế trả lời chung chung.
+
+**Cách sửa.** `HeadingChunkerV2` gộp mọi mục ngắn hơn 180 ký tự vào mục kế tiếp, để dòng tiêu đề luôn đi kèm nội dung có dữ kiện.
+
+**Kết quả đo được** (`scripts/ablation.py`, thí nghiệm B):
+
+| Biến thể | Số chunk | Độ dài TB | Q1 | Q2 | Q3 | Q4 | Q5 | Tổng /10 |
+|---|---|---|---|---|---|---|---|---|
+| `HeadingChunker(600)` — `--strategy heading` | 39 | 236 | 2 | 1 | 1 | 1 | 2 | 7 |
+| `HeadingChunkerV2(600, 180)` — `--strategy heading2` | 30 | 307 | 2 | 1 | **2** | 1 | 2 | **8** |
+
+Sửa đúng lỗi đã chẩn đoán, và đồng thời giảm 23% số chunk.
 
 ---
 
@@ -129,46 +187,80 @@ class HeadingChunker:
 
 ### Câu hỏi đánh giá & Câu trả lời chuẩn (nhóm thống nhất)
 
-> **Đúng 5 câu hỏi**, đa dạng, có thể kiểm chứng; **ít nhất 1 câu** cần lọc metadata mới trả lời tốt. Đây là bộ câu hỏi chung cho mọi thành viên chạy.
-> Bộ dưới đây là **đề xuất** dựa trên corpus khởi động, đã cấu hình sẵn trong `scripts/run_benchmark.py` (`BENCHMARK`); nhóm sửa lại cho khớp corpus thật.
+Bộ câu hỏi nằm trong hằng số `BENCHMARK` của `scripts/run_benchmark.py` để mọi thành viên chạy đúng cùng một bộ.
 
 | # | Câu hỏi (Query) | Câu trả lời chuẩn (Gold Answer) | Chunk nào chứa thông tin? |
 |---|-------|-------------------------------|--------------------------|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | Trong cổng học vụ, theo lịch của từng học kỳ. | course-registration#0 |
-| 2 | Học phần tiên quyết là gì và sinh viên cần làm gì trước khi đăng ký? | Kiểm tra điều kiện tiên quyết trước khi xác nhận đăng ký. | course-registration#0 |
-| 3 | Nếu bị trùng lịch học thì sinh viên xử lý thế nào? *(filter `audience=student`)* | Điều chỉnh lớp học phần trước thời hạn điều chỉnh được công bố. | course-registration#1 |
-| 4 | Cần mang gì khi mượn tài liệu ở thư viện? | Thẻ định danh hợp lệ. | library-services#0 |
-| 5 | Yêu cầu ngoại lệ về đăng ký học phần gửi qua đâu? *(filter `audience=student`)* | Qua kênh hỗ trợ học vụ chính thức. | course-registration#1 |
+| 1 | Sinh viên được mượn tối đa bao nhiêu cuốn tài liệu và trong bao lâu? *(cần lọc `audience=student`)* | Tối đa 5 cuốn cùng lúc, thời hạn 14 ngày mỗi cuốn. | `muon-tai-lieu-sinh-vien`, mục Hạn mức và thời hạn mượn |
+| 2 | Nộp đơn phúc khảo điểm trong thời hạn bao lâu và lệ phí bao nhiêu? | Trong 7 ngày làm việc kể từ ngày công bố điểm; lệ phí 50.000 đồng mỗi học phần. | `phuc-khao-diem`, hai mục Thời hạn nộp đơn và Lệ phí |
+| 3 | Điều kiện để được xét học bổng khuyến khích học tập là gì? | Điểm trung bình học kỳ từ 3,2; rèn luyện từ 80; tối thiểu 14 tín chỉ; không bị kỷ luật. | `hoc-bong-khuyen-khich`, mục Điều kiện xét |
+| 4 | Rút học phần sau thời hạn điều chỉnh thì bảng điểm ghi gì? | Ghi ký hiệu W, không tính vào điểm trung bình tích lũy. | `dieu-chinh-hoc-phan`, mục Rút học phần sau thời hạn điều chỉnh |
+| 5 | Thư viện mở cửa mấy giờ vào thứ Bảy? | Từ 8 giờ đến 17 giờ. | `gio-mo-cua-thu-vien`, mục Giờ mở cửa |
+
+Bộ câu hỏi đa dạng có chủ đích: câu 1 nhập nhằng theo đối tượng, câu 2 có hai phần nằm ở hai mục khác nhau, câu 3 hỏi danh sách điều kiện, câu 4 hỏi hệ quả của một hành động, câu 5 hỏi một dữ kiện đơn lẻ.
 
 ### Tổng hợp chất lượng truy xuất của nhóm
 
-> Cách chấm (theo `docs/SCORING.md`): **2 điểm/câu** — top-3 chứa chunk liên quan + agent trả lời đúng (2), có liên quan nhưng thiếu/không ở top-1 (1), không có trong top-3 (0).
+Chiến lược tốt nhất của nhóm là `HeadingChunkerV2`, đạt **8/10**.
 
-| # | Câu hỏi | Chiến lược tốt nhất cho câu này | Có chunk liên quan trong top-3? | Ghi chú |
-|---|---------|-------------------------------|-------------------------------|---------|
-| 1 | Đăng ký học phần ở đâu | heading ≈ sentence (0.768 / 0.767) | Có | Mọi chiến lược đều đúng top-1 |
-| 2 | Học phần tiên quyết | heading (0.742) | Có | Mock embedder trả về sai tài liệu (library) → cần embedder thật |
-| 3 | Trùng lịch | heading (top-1, 0.588) | Có | sentence chunking đẩy chunk đúng xuống top-2 |
-| 4 | Mang gì khi mượn sách | sentence (0.647) | Có | Mock embedder trả về chunk "cần bổ sung quy định…" (nhiễu) |
-| 5 | Yêu cầu ngoại lệ | sentence (0.839) | Có | Chunk một câu chứa đúng đáp án |
+| # | Câu hỏi | Chiến lược tốt nhất cho câu này | Chunk vàng trong top-3? | Điểm | Ghi chú |
+|---|---------|-------------------------------|-------------------------------|---|---------|
+| 1 | Hạn mức mượn tài liệu | Mọi chiến lược đều 2/2 | Có, top-1 với điểm 0,821 | 2 | Xem mục lọc metadata bên dưới: không lọc thì tài liệu giảng viên đứng ngay sau |
+| 2 | Thời hạn và lệ phí phúc khảo | Không chiến lược nào đạt 2 | Có, top-1 với điểm 0,510 | 1 | Câu hỏi hai phần; mục Lệ phí thắng ở 0,510, mục Thời hạn theo sau ở 0,457 |
+| 3 | Điều kiện học bổng | sentence và heading V2 | Có, top-1 với điểm 0,792 | 2 | Heading gốc chỉ được 1 vì chunk tiêu đề che mất chunk điều kiện |
+| 4 | Ký hiệu W khi rút học phần | Không chiến lược nào đạt 2 | Có, top-1 với điểm 0,641 | 1 | Chunk mở đầu thắng chunk chứa ký hiệu W vốn đứng ngay sau ở 0,584 |
+| 5 | Giờ mở cửa thứ Bảy | Mọi chiến lược đều 2/2 | Có, top-1 với điểm 0,878 | 2 | Điểm cao nhất toàn bộ benchmark |
 
-**Lọc bằng metadata có giúp ích không? Ở câu hỏi nào?**
-> Có ở câu 3 và 5: `metadata_filter={"audience": "student"}` loại hẳn hai chunk thư viện (`audience=all`) khỏi ứng viên nên top-3 chỉ còn đúng tài liệu đăng ký học phần, và với mock embedder (vốn xếp hạng ngẫu nhiên) đây là lý do duy nhất hai câu này vẫn trả về chunk liên quan. Đánh đổi: bộ lọc `audience=student` sẽ **bỏ sót** tài liệu `audience=all` nếu đáp án nằm ở đó (ví dụ quy định thư viện áp dụng cho mọi người), nên nhóm nên hỗ trợ lọc `audience in ["student", "all"]` — `search_with_filter` đã nhận giá trị dạng list.
+**Tổng: 8/10.** Cả 5 trên 5 câu đều có chunk vàng trong top-3, và 5 trên 5 có chunk vàng ở top-1. Hai điểm bị trừ đều không phải do truy xuất sai tài liệu, mà do **chunk ở top-1 không chứa đủ dữ kiện để trả lời**.
+
+### Lọc bằng metadata có giúp ích không?
+
+Nhóm đo trực tiếp bằng `scripts/ablation.py`, thí nghiệm A, trên Q1 với chiến lược `heading`:
+
+| Cấu hình | Điểm | Top-1 | Top-2 |
+|---|---|---|---|
+| Không lọc | 2/2 | `muon-tai-lieu-sinh-vien#1` — 0,789 | `muon-tai-lieu-giang-vien#1` — 0,766 |
+| Lọc `audience=student` | 2/2 | `muon-tai-lieu-sinh-vien#1` — 0,789 | `muon-tai-lieu-sinh-vien#0` — 0,705 |
+
+**Câu trả lời trung thực: trên corpus này bộ lọc không làm tăng điểm.** Cả hai cấu hình đều 2/2. Nhưng nó thu hẹp khoảng cách an toàn một cách đáng kể: khi không lọc, tài liệu dành cho giảng viên đứng ngay vị trí thứ hai với điểm chỉ thấp hơn 0,023. Hai đoạn văn này gần như đồng nghĩa với nhau, chỉ khác con số 5 và 15, 14 ngày và 60 ngày. Chênh lệch 0,023 là quá mỏng: chỉ cần đổi cách diễn đạt câu hỏi hoặc đổi embedder là thứ tự có thể đảo, và khi đó agent sẽ trả lời sinh viên rằng họ được mượn 15 cuốn trong 60 ngày. **Bộ lọc ở đây là bảo hiểm chống trả lời sai, không phải công cụ tăng điểm.**
+
+**Đánh đổi độ thu hồi, đo được bằng số.** Nhóm thử áp bộ lọc `audience=student` cho Q5, câu hỏi có đáp án nằm trong tài liệu `audience=all`:
+
+| Cấu hình lọc cho Q5 | Điểm | Top-1 |
+|---|---|---|
+| Không lọc | 2/2 | `gio-mo-cua-thu-vien#1` |
+| `audience=student`, quá chặt | **0/2** | `muon-tai-lieu-sinh-vien#2`, hoàn toàn lạc đề |
+| `audience in [student, all]` | 2/2 | `gio-mo-cua-thu-vien#1` |
+
+Lọc quá chặt làm điểm rơi từ 2 xuống 0 vì tài liệu chứa đáp án bị loại khỏi tập ứng viên trước cả khi xếp hạng. Cách dùng đúng là lọc theo tập giá trị `["student", "all"]`, tức là "dành riêng cho tôi, hoặc dành cho tất cả mọi người". Hàm `search_with_filter` trong `src/store.py` đã nhận giá trị dạng danh sách nên hỗ trợ sẵn cách này.
 
 ---
 
 ## 4. Thuyết trình (Demo) & Bài học nhóm — Nhóm (5 điểm)
 
-**Những phân tích (insights) hay nhất nhóm sẽ trình bày:**
-> 1. Embedding không mã hoá phủ định: "học phí tăng 10%" và "giảm 10%" có cosine 0.903, cao hơn cả cặp diễn giải lại đúng nghĩa — retrieval đúng đoạn nhưng LLM phải đọc kỹ.
-> 2. Metadata `audience` cứu retrieval khi embedder yếu (mock): lọc trước thu hẹp ứng viên nên top-3 luôn đúng tài liệu.
-> 3. `[NHÓM ĐIỀN]` — so sánh chiến lược giữa các thành viên trên corpus thật.
+**Những phân tích hay nhất nhóm sẽ trình bày:**
+
+> 1. **Chọn embedder quan trọng hơn chọn cách chunk.** Bốn chiến lược chunking chỉ chênh nhau 1 điểm trên 10, trong khi đổi từ embedder giả lập sang embedder thật thay đổi 5 đến 7 điểm. Mọi so sánh chiến lược chạy trên mock embedder đều là so sánh nhiễu với nhiễu.
+> 2. **Chunk "thuần chủ đề" là một cái bẫy.** Chunk chỉ chứa dòng tiêu đề đạt điểm cosine cao nhất tài liệu vì nó không bị pha loãng bởi chi tiết, nhưng chính vì không có chi tiết nào nên nó vô dụng để trả lời. Gộp mục ngắn vào mục kế tiếp sửa được lỗi này và còn giảm 23% số chunk.
+> 3. **Bộ lọc metadata là bảo hiểm, không phải bộ tăng điểm.** Nó không đổi điểm ở câu 1, nhưng nó loại bỏ một tài liệu gần như đồng nghĩa chỉ kém 0,023 điểm. Ngược lại, lọc quá chặt kéo điểm câu 5 từ 2 xuống 0. Đúng cách là lọc theo tập `["student", "all"]`.
+
+**Phân tích lỗi (Bài tập 3.5).**
+
+Trường hợp lỗi rõ nhất là **Q4**, câu duy nhất không chiến lược nào đạt 2 điểm.
+
+- **Hiện tượng:** truy xuất trả về đúng tài liệu `dieu-chinh-hoc-phan`, nhưng chunk ở top-1 là đoạn mở đầu, điểm 0,641, nói về thời hạn điều chỉnh kéo dài hai tuần. Chunk chứa đáp án thật, ký hiệu W, nằm ở top-2 với 0,584.
+- **Nguyên nhân:** câu hỏi chứa cụm "sau thời hạn điều chỉnh", và cụm này xuất hiện nguyên văn trong đoạn mở đầu. Embedding khớp theo bối cảnh từ ngữ, trong khi thứ người hỏi cần lại là hệ quả được nêu ở mục sau. Đây không phải lỗi chunking mà là **lệch giữa từ ngữ của câu hỏi và vị trí của đáp án**.
+- **Q2 lỗi theo kiểu khác:** câu hỏi có hai phần, thời hạn và lệ phí, nằm ở hai mục riêng biệt. Không một chunk đơn lẻ nào chứa đủ cả hai, nên mọi chiến lược đều tối đa 1 điểm. Đây là giới hạn của việc lấy top-1 làm ngữ cảnh duy nhất.
+- **Đề xuất cải thiện:**
+  1. Cho agent dùng cả `top_k=3` chunk làm ngữ cảnh thay vì chỉ trích dẫn chunk đầu. Với Q2, chunk 1 và chunk chứa thời hạn cùng nằm trong top-3 nên câu trả lời sẽ đủ ý. Prompt trong `src/agent.py` đã đánh số nhiều khối ngữ cảnh, chỉ cần LLM thật thay cho hàm trích xuất offline hiện tại.
+  2. Thêm bước xếp hạng lại theo từ khoá của câu hỏi, ưu tiên chunk chứa con số hoặc ký hiệu khi câu hỏi mang tính tra cứu dữ kiện.
+  3. Với tài liệu quy định, thêm câu tóm tắt mỗi mục vào đầu chunk lúc nạp, để chunk vừa mang nhãn chủ đề vừa mang dữ kiện.
 
 **Bài học rút ra khi so sánh trong nhóm:**
-> `[NHÓM ĐIỀN]`
+> Cùng một corpus và cùng một bộ câu hỏi, ba chiến lược chunking cho kết quả chênh nhau rất ít, và mọi thất bại còn lại đều không nằm ở chỗ nhóm đã tối ưu. Nhóm mất nhiều công so sánh cách cắt văn bản, trong khi hai nguồn sai số lớn hơn nhiều là chất lượng embedder và cách agent sử dụng ngữ cảnh. Bài học là đo trước, tối ưu sau: nếu nhóm chạy bảng so sánh embedder ngay từ đầu thì đã biết nên đầu tư công sức vào đâu.
 
-**Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu (data strategy)?**
-> `[NHÓM ĐIỀN]` — Gợi ý từ lần chạy thử: tách trang gộp nhiều đối tượng thành nhiều file (mỗi file một `audience`) ngay lúc crawl, và dùng embedder đa ngữ (`paraphrase-multilingual-MiniLM-L12-v2`) thay vì model tiếng Anh vì corpus tiếng Việt.
+**Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu?**
+> Thứ nhất, tách tài liệu theo đối tượng ngay từ lúc thu thập thay vì để một trang gộp nhiều đối tượng, vì đây là thứ làm cho bộ lọc có giá trị thật. Thứ hai, viết câu hỏi đánh giá trước rồi mới soát lại corpus, để phát hiện sớm những câu có đáp án nằm rải ở nhiều mục như Q2. Thứ ba, chốt embedder trước khi so sánh chiến lược chunking, vì thứ tự ngược lại khiến nhóm suýt kết luận sai từ bảng điểm chạy trên mock embedder.
 
 ---
 
@@ -176,8 +268,8 @@ class HeadingChunker:
 
 | Tiêu chí | Điểm tự đánh giá |
 |----------|-------------------|
-| Lựa chọn tài liệu (Document Set Quality) | / 10 |
-| Thiết kế chiến lược (Strategy Design) | / 15 |
-| Chất lượng truy xuất (Retrieval Quality) | / 10 |
-| Thuyết trình (Demo) | / 5 |
-| **Tổng phần nhóm** | **/ 40** |
+| Lựa chọn tài liệu (Document Set Quality) | 8 / 10 — đủ 10 tài liệu, metadata đầy đủ và có 3 giá trị `audience`, nhưng là dữ liệu mẫu tự soạn chứ chưa phải nguồn công khai thật |
+| Thiết kế chiến lược (Strategy Design) | 14 / 15 — 4 chiến lược, có chiến lược riêng theo heading, có chẩn đoán lỗi và cải tiến đã kiểm chứng bằng số |
+| Chất lượng truy xuất (Retrieval Quality) | 8 / 10 — 5/5 câu có chunk vàng ở top-1, 2 câu bị trừ vì chunk thiếu dữ kiện |
+| Thuyết trình (Demo) | / 5 — chấm sau buổi trình bày |
+| **Tổng phần nhóm** | **30 / 35 điểm đã chấm được** |
