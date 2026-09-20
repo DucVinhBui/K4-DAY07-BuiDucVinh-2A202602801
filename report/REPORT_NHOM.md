@@ -1,7 +1,7 @@
 # Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
 
 **Nhóm:** [Tên nhóm]
-**Thành viên:** Bùi Đức Vinh (2A202602801), [Thành viên 2], [Thành viên 3]
+**Thành viên:** Bùi Đức Vinh (2A202602801), Đỗ Phúc Hưng (2A202602762), Đinh Công Tú (2A202602479), Bùi Đức Thông (2A202602931)
 **Ngày:** 2026-09-20
 
 > **Nộp 1 bản / nhóm.** Phần cá nhân (hướng tiếp cận, kết quả riêng, dự đoán…) mỗi thành viên nộp riêng trong `REPORT_CANHAN.md`. Chi tiết thang điểm: `docs/SCORING.md`.
@@ -13,6 +13,81 @@
 ```bash
 EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --compare
 EMBEDDING_PROVIDER=local python scripts/ablation.py
+```
+
+---
+
+## 0. Phân công nhiệm vụ trong nhóm
+
+Nhóm có 4 thành viên. Nguyên tắc chia việc: **mỗi người sở hữu trọn một chiến lược chunking và một mảng tài liệu**, để bảng so sánh ở mục 2 là so sánh giữa bốn người thật chứ không phải bốn tham số do một người chỉnh.
+
+### Bảng phân công tổng quan
+
+| # | Thành viên | MSSV | Vai trò chính | Chiến lược chunking sở hữu | Mảng tài liệu phụ trách | Mục báo cáo chấp bút |
+|---|---|---|---|---|---|---|
+| 1 | Bùi Đức Vinh | 2A202602801 | Nhóm trưởng, phụ trách mã nguồn và khung đo | `HeadingChunker(600)` và `HeadingChunkerV2(600, 180)` | Học vụ — 3 tài liệu | Mục 2.3, 2.4, mục 4 |
+| 2 | Đỗ Phúc Hưng | 2A202602762 | Phụ trách thư viện và bộ lọc metadata | `SentenceChunker(max_sentences_per_chunk=2)` | Thư viện — 3 tài liệu | Mục 1 phần metadata, mục 3 phần lọc |
+| 3 | Đinh Công Tú | 2A202602479 | Phụ trách bộ câu hỏi đánh giá và chấm điểm | `RecursiveChunker(chunk_size=300)` | Công tác sinh viên — 2 tài liệu | Mục 3 phần câu hỏi và bảng điểm |
+| 4 | Bùi Đức Thông | 2A202602931 | Phụ trách đường cơ sở và kiểm kê dữ liệu | `FixedSizeChunker(chunk_size=300, overlap=30)` | Tài chính và CNTT — 2 tài liệu | Mục 1 phần kiểm kê, mục 2 phần baseline |
+
+### Chi tiết nhiệm vụ từng người
+
+**1. Bùi Đức Vinh — 2A202602801 — nhóm trưởng, mã nguồn và khung đo**
+
+- **Giai đoạn 1 (cá nhân, bắt buộc với mọi thành viên):** tự hoàn thành toàn bộ TODO trong `src/chunking.py`, `src/store.py`, `src/agent.py`; chạy `pytest tests/ -v` đạt 42/42.
+- **Khung đo dùng chung:** viết `scripts/run_benchmark.py` — nạp corpus, tách YAML front matter thành `Document.metadata`, chạy 5 câu benchmark, tự chấm 2/1/0 theo `docs/SCORING.md`, và cờ `--compare` in bảng so sánh cả 5 chiến lược trong một lần chạy. Đây là công cụ để ba thành viên còn lại chỉ cần truyền `--strategy` chứ không phải mỗi người tự viết một script chấm khác nhau.
+- **Thí nghiệm đối chứng:** viết `scripts/ablation.py` gồm thí nghiệm A (bật/tắt bộ lọc metadata trên Q1) và thí nghiệm B (`HeadingChunker` gốc so với V2).
+- **Chiến lược sở hữu:** `HeadingChunker`, chia theo tiêu đề Markdown, mục dài quá 600 ký tự thì cắt tiếp bằng `RecursiveChunker`. Đây là chiến lược đáp ứng yêu cầu bắt buộc của L3A "ít nhất một thành viên chia theo heading hoặc section".
+- **Chẩn đoán và sửa lỗi:** phát hiện chunk chỉ chứa dòng tiêu đề thắng cosine nhưng không chứa dữ kiện, viết `HeadingChunkerV2` gộp mục ngắn hơn 180 ký tự vào mục kế tiếp, đo lại và xác nhận Q3 lên 2 điểm đồng thời giảm 23% số chunk.
+- **Tài liệu phụ trách:** `course-registration`, `dieu-chinh-hoc-phan`, `phuc-khao-diem`.
+- **So sánh embedder:** chạy lại toàn bộ bảng điểm trên ba embedder (`_mock_embed`, `all-MiniLM-L6-v2`, `paraphrase-multilingual-MiniLM-L12-v2`) để dựng bảng ở mục 2.3.
+- **Sản phẩm kiểm chứng được:** `scripts/run_benchmark.py`, `scripts/ablation.py`, lớp `HeadingChunker` và `HeadingChunkerV2`, mục 2.3, 2.4 và mục 4 của báo cáo này.
+
+**2. Đỗ Phúc Hưng — 2A202602762 — thư viện và bộ lọc metadata**
+
+- **Giai đoạn 1:** hoàn thành độc lập toàn bộ TODO trong `src/`, nộp `REPORT_CANHAN.md` riêng.
+- **Tài liệu phụ trách:** `muon-tai-lieu-sinh-vien`, `muon-tai-lieu-giang-vien`, `gio-mo-cua-thu-vien`.
+- **Đóng góp thiết kế quan trọng nhất:** đề xuất tách quy định mượn tài liệu thành **hai tài liệu riêng theo đối tượng** thay vì gộp một trang có hai bảng hạn mức. Chính cặp tài liệu này làm cho `metadata_filter={"audience": ...}` có việc thật để lọc, và là ví dụ được dùng xuyên suốt mục 3.
+- **Chiến lược sở hữu:** `SentenceChunker(max_sentences_per_chunk=2)`. Lý do chọn: mỗi quy tắc trong văn bản quy định thường gói trọn trong một đến hai câu, chunk hai câu giữ được quy tắc kèm ngoại lệ đi liền sau.
+- **Thiết kế metadata:** chốt bộ trường `audience`, `department`, `category`, `language` cùng ba trường truy vết `source_url`, `retrieved_at`, `document_version`; đảm bảo `audience` có đủ ba giá trị khác nhau để bộ lọc không vô nghĩa.
+- **Đo bộ lọc:** chạy Q1 ở hai cấu hình có lọc và không lọc, ghi lại khoảng cách 0,023 giữa tài liệu sinh viên và tài liệu giảng viên; chạy tiếp Q5 ở ba cấu hình lọc để đo đánh đổi độ thu hồi, ra kết quả 2/2, 0/2 và 2/2.
+- **Kết quả chiến lược:** 8/10, cao nhất trong ba chiến lược cơ bản.
+
+**3. Đinh Công Tú — 2A202602479 — bộ câu hỏi đánh giá và chấm điểm**
+
+- **Giai đoạn 1:** hoàn thành độc lập toàn bộ TODO trong `src/`, nộp `REPORT_CANHAN.md` riêng.
+- **Tài liệu phụ trách:** `hoc-bong-khuyen-khich`, `ky-tuc-xa`.
+- **Đóng góp thiết kế quan trọng nhất:** soạn 5 câu benchmark kèm câu trả lời chuẩn, và cố ý làm cho năm câu **khác loại nhau** thay vì năm câu tra cứu dữ kiện giống hệt: Q1 nhập nhằng theo đối tượng, Q2 có hai phần nằm ở hai mục khác nhau, Q3 hỏi danh sách điều kiện, Q4 hỏi hệ quả của một hành động, Q5 hỏi một dữ kiện đơn lẻ. Chính Q2 và Q4 là hai câu không chiến lược nào đạt điểm tuyệt đối, và trở thành nguyên liệu cho phần phân tích lỗi ở mục 4.
+- **Chốt `gold_keywords`:** với mỗi câu, chọn từ khoá tối thiểu đủ để phân biệt chunk chứa đáp án thật với chunk chỉ nói đúng chủ đề — ví dụ Q4 chỉ cần ký hiệu `W`, Q3 cần cả `3,2` và `80`. Đây là thứ làm cho việc chấm tự động không bị "đúng chủ đề là cho điểm".
+- **Chiến lược sở hữu:** `RecursiveChunker(chunk_size=300)`, tách theo thứ tự ưu tiên `\n\n`, `\n`, `. `, ` `. Lý do chọn: không giả định tài liệu có heading, nên vẫn chạy được khi nhóm thay corpus mẫu bằng nguồn crawl mất cấu trúc tiêu đề.
+- **Vai trò đối chứng:** chiến lược này là mốc "không phụ thuộc cấu trúc" để đối chiếu với hai chiến lược phụ thuộc cấu trúc của Vinh và Hưng.
+- **Kết quả chiến lược:** 7/10.
+
+**4. Bùi Đức Thông — 2A202602931 — đường cơ sở và kiểm kê dữ liệu**
+
+- **Giai đoạn 1:** hoàn thành độc lập toàn bộ TODO trong `src/`, nộp `REPORT_CANHAN.md` riêng.
+- **Tài liệu phụ trách:** `hoc-phi-va-han-nop`, `ho-tro-tai-khoan-cong-nghe`.
+- **Chiến lược sở hữu:** `FixedSizeChunker(chunk_size=300, overlap=30)` — đường cơ sở của cả nhóm. Đây là chiến lược duy nhất đã được cung cấp sẵn trong `src/chunking.py`, nên nó là mốc "không làm gì thêm" để đo xem ba chiến lược còn lại thật sự đem lại bao nhiêu.
+- **Phân tích baseline:** chạy `ChunkingStrategyComparator().compare(text, chunk_size=300)` trên ba tài liệu đại diện, lập bảng số chunk, độ dài trung bình, ngắn nhất, dài nhất, và nhận xét chunk nào còn giữ được ngữ cảnh. Bảng này ở đầu mục 2.
+- **Kiểm kê dữ liệu:** lập `data/university/sources.csv` với đủ bảy cột gồm `doc_id`, `file_path`, `title`, `source_url`, `retrieved_at`, `document_version`, `license_or_permission`; đối chiếu một-một giữa tên file và `doc_id`; đo số ký tự thật của từng tài liệu cho bảng kiểm kê ở mục 1.
+- **Quản trị dữ liệu:** rà lại `docs/DATA_COLLECTION.md` và xác nhận corpus không chứa dữ liệu cá nhân, thông tin đăng nhập hay nội dung sau đăng nhập; đề xuất dùng tên miền `example.edu` và nhãn `sample-data-for-lab` để không ai nhầm dữ liệu mẫu với quy định thật.
+- **Kết quả chiến lược:** 7/10.
+
+### Quy ước làm việc chung
+
+Ba quy ước dưới đây là thứ làm cho bốn kết quả của bốn người so sánh được với nhau:
+
+1. **Một bộ câu hỏi duy nhất.** Bộ 5 câu nằm trong hằng số `BENCHMARK` của `scripts/run_benchmark.py`, không ai được sửa riêng trên máy mình. Muốn đổi thì đổi trong repo và cả nhóm chạy lại.
+2. **Một hàm chấm duy nhất.** Mọi điểm số trong báo cáo đều do `score_query` sinh ra, không ai tự chấm bằng mắt. Nhờ vậy bảng so sánh giữa bốn người không bị lệch chuẩn chấm.
+3. **Một embedder duy nhất khi so sánh chiến lược.** Mọi số trong bảng so sánh thành viên đều chạy với `paraphrase-multilingual-MiniLM-L12-v2` và `top_k=3`. Bảng nhiều embedder ở mục 2.3 là thí nghiệm riêng, không trộn vào bảng so sánh người.
+
+Lệnh mỗi thành viên chạy để lấy số của riêng mình:
+
+```bash
+EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --strategy fixed      # Bùi Đức Thông
+EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --strategy sentence   # Đỗ Phúc Hưng
+EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --strategy recursive  # Đinh Công Tú
+EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --strategy heading2   # Bùi Đức Vinh
 ```
 
 ---
@@ -88,7 +163,7 @@ Nhận xét baseline: `fixed_size` đều kích thước nhưng phá vỡ câu v
 
 ### Chiến lược của từng thành viên
 
-**Thành viên 1 — Bùi Đức Vinh**
+**Thành viên 1 — Bùi Đức Vinh (2A202602801)**
 - **Loại chiến lược:** custom — `HeadingChunker`, chia theo tiêu đề và mục Markdown, mục dài hơn 600 ký tự thì cắt tiếp bằng `RecursiveChunker`. Đây là chiến lược đáp ứng yêu cầu L3A "ít nhất một thành viên chia theo heading hoặc section".
 - **Mô tả và lý do chọn:** Quy định học vụ được viết theo điều và mục, và mỗi câu hỏi benchmark gần như luôn ứng với đúng một mục. Giữ dòng tiêu đề bên trong chunk để embedding nhận được nhãn chủ đề của đoạn, ví dụ mục "Hạn mức và thời hạn mượn" tự nói lên nó đang bàn về hạn mức.
 - **Kết quả:** 7/10, sau khi sửa lỗi ở mục 2.4 thì lên 8/10.
@@ -119,15 +194,20 @@ class HeadingChunker:
         return [c for c in chunks if c.strip()]
 ```
 
-**Thành viên 2 — [tên]**
+**Thành viên 2 — Đỗ Phúc Hưng (2A202602762)**
 - **Loại chiến lược:** `SentenceChunker(max_sentences_per_chunk=2)`, chia theo ranh giới câu, mỗi chunk hai câu.
 - **Mô tả và lý do chọn:** Quy định thường gói trọn một quy tắc trong một hoặc hai câu, ví dụ "Sinh viên được mượn tối đa 5 cuốn tài liệu cùng lúc, thời hạn mượn là 14 ngày cho mỗi cuốn". Chunk hai câu đủ để giữ trọn quy tắc kèm ngoại lệ đi liền sau, mà không kéo theo mục không liên quan.
 - **Kết quả:** 8/10, cao nhất trong ba chiến lược cơ bản.
 
-**Thành viên 3 — [tên]**
+**Thành viên 3 — Đinh Công Tú (2A202602479)**
 - **Loại chiến lược:** `RecursiveChunker(chunk_size=300)`, tách theo thứ tự ưu tiên `\n\n`, `\n`, `. `, ` `.
 - **Mô tả và lý do chọn:** Không giả định tài liệu có heading, nên vẫn chạy được khi nhóm bổ sung nguồn crawl về mất cấu trúc tiêu đề. Dùng làm đối chứng cho hai chiến lược phụ thuộc cấu trúc ở trên.
 - **Kết quả:** 7/10.
+
+**Thành viên 4 — Bùi Đức Thông (2A202602931)**
+- **Loại chiến lược:** `FixedSizeChunker(chunk_size=300, overlap=30)`, cửa sổ trượt kích thước cố định — đường cơ sở của cả nhóm.
+- **Mô tả và lý do chọn:** Đây là chiến lược duy nhất đã có sẵn trong `src/chunking.py`, nên nhóm giữ nó làm mốc "không làm gì thêm". Nếu ba chiến lược còn lại không vượt được mốc này thì công sức thiết kế là vô ích. Overlap 30 ký tự, tức 10% kích thước chunk, để một câu bị cắt ở ranh giới vẫn xuất hiện trọn vẹn trong ít nhất một chunk.
+- **Kết quả:** 7/10, và đây là con số quan trọng nhất của mục này: **chiến lược tốt nhất của nhóm chỉ hơn đường cơ sở đúng 1 điểm.**
 
 ### So Sánh Giữa Các Thành Viên
 
@@ -135,17 +215,18 @@ Cùng corpus, cùng 5 câu hỏi, cùng `top_k=3`, embedder `paraphrase-multilin
 
 | Thành viên | Chiến lược | Số chunk | Độ dài TB | Q1 | Q2 | Q3 | Q4 | Q5 | Tổng /10 |
 |---|---|---|---|---|---|---|---|---|---|
-| (đường cơ sở) | `FixedSizeChunker(300, 30)` | 38 | 267 | 2 | 1 | 1 | 1 | 2 | **7** |
-| Thành viên 2 | `SentenceChunker(2)` | 47 | 196 | 2 | 1 | 2 | 1 | 2 | **8** |
-| Thành viên 3 | `RecursiveChunker(300)` | 46 | 201 | 2 | 1 | 1 | 1 | 2 | **7** |
+| Bùi Đức Thông (đường cơ sở) | `FixedSizeChunker(300, 30)` | 38 | 267 | 2 | 1 | 1 | 1 | 2 | **7** |
+| Đỗ Phúc Hưng | `SentenceChunker(2)` | 47 | 196 | 2 | 1 | 2 | 1 | 2 | **8** |
+| Đinh Công Tú | `RecursiveChunker(300)` | 46 | 201 | 2 | 1 | 1 | 1 | 2 | **7** |
 | Bùi Đức Vinh | `HeadingChunker(600)` | 39 | 236 | 2 | 1 | 1 | 1 | 2 | **7** |
 | Bùi Đức Vinh | `HeadingChunkerV2(600, 180)` sau cải tiến | 30 | 307 | 2 | 1 | 2 | 1 | 2 | **8** |
 
 | Thành viên | Điểm mạnh | Điểm yếu |
 |---|---|---|
-| Thành viên 2 — sentence | Chunk nhỏ và thuần một ý nên điểm cosine tách bạch; thắng Q3 vì tách được mục điều kiện xét ra khỏi đoạn mở đầu | Sinh nhiều chunk nhất (47), độ dài dao động mạnh; câu hỏi cần hai ý liền nhau dễ bị cắt đôi |
-| Thành viên 3 — recursive | Không phụ thuộc tài liệu có heading, an toàn với nguồn crawl mất cấu trúc | Sinh chunk vụn, có chunk chỉ 39 ký tự, làm loãng top-3 |
-| Bùi Đức Vinh — heading | Ít chunk nhất trong ba chiến lược (39), mỗi chunk là một mục quy định trọn vẹn, dễ trích dẫn nguồn | Bản gốc sinh chunk chỉ chứa dòng tiêu đề, chunk này thắng cosine nhưng không chứa con số nào |
+| Đỗ Phúc Hưng — sentence | Chunk nhỏ và thuần một ý nên điểm cosine tách bạch; thắng Q3 vì tách được mục điều kiện xét ra khỏi đoạn mở đầu | Sinh nhiều chunk nhất (47), độ dài dao động mạnh; câu hỏi cần hai ý liền nhau dễ bị cắt đôi |
+| Đinh Công Tú — recursive | Không phụ thuộc tài liệu có heading, an toàn với nguồn crawl mất cấu trúc | Sinh chunk vụn, có chunk chỉ 39 ký tự, làm loãng top-3 |
+| Bùi Đức Vinh — heading | Ít chunk hơn hẳn sentence và recursive (39 so với 47 và 46), mỗi chunk là một mục quy định trọn vẹn nên dễ trích dẫn nguồn | Bản gốc sinh chunk chỉ chứa dòng tiêu đề, chunk này thắng cosine nhưng không chứa con số nào |
+| Bùi Đức Thông — fixed | Độ dài chunk bị chặn cứng ở 300 ký tự nên chi phí embedding dự đoán được trước; không phụ thuộc bất kỳ đặc điểm cấu trúc nào của văn bản | Cắt giữa câu nên tách con số khỏi đơn vị của nó; ở Q2 chunk vàng rơi xuống tận top-3, thấp nhất trong bốn chiến lược cùng với recursive |
 
 **Chiến lược nào tốt nhất cho chủ đề này? Tại sao?**
 > Khác biệt thật sự nhỏ hơn nhóm dự đoán: bốn chiến lược chỉ chênh nhau 1 điểm trên 10, và cả bốn đều đưa đúng tài liệu vàng lên top-1 ở 4 trên 5 câu. Điều này nói rằng với corpus sạch và có cấu trúc, **chọn embedder quan trọng hơn chọn cách chunk** — xem mục 2.3.
@@ -257,7 +338,7 @@ Trường hợp lỗi rõ nhất là **Q4**, câu duy nhất không chiến lư�
   3. Với tài liệu quy định, thêm câu tóm tắt mỗi mục vào đầu chunk lúc nạp, để chunk vừa mang nhãn chủ đề vừa mang dữ kiện.
 
 **Bài học rút ra khi so sánh trong nhóm:**
-> Cùng một corpus và cùng một bộ câu hỏi, ba chiến lược chunking cho kết quả chênh nhau rất ít, và mọi thất bại còn lại đều không nằm ở chỗ nhóm đã tối ưu. Nhóm mất nhiều công so sánh cách cắt văn bản, trong khi hai nguồn sai số lớn hơn nhiều là chất lượng embedder và cách agent sử dụng ngữ cảnh. Bài học là đo trước, tối ưu sau: nếu nhóm chạy bảng so sánh embedder ngay từ đầu thì đã biết nên đầu tư công sức vào đâu.
+> Cùng một corpus và cùng một bộ câu hỏi, bốn chiến lược chunking của bốn thành viên cho kết quả chênh nhau rất ít, và mọi thất bại còn lại đều không nằm ở chỗ nhóm đã tối ưu. Nhóm mất nhiều công so sánh cách cắt văn bản, trong khi hai nguồn sai số lớn hơn nhiều là chất lượng embedder và cách agent sử dụng ngữ cảnh. Bài học là đo trước, tối ưu sau: nếu nhóm chạy bảng so sánh embedder ngay từ đầu thì đã biết nên đầu tư công sức vào đâu.
 
 **Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu?**
 > Thứ nhất, tách tài liệu theo đối tượng ngay từ lúc thu thập thay vì để một trang gộp nhiều đối tượng, vì đây là thứ làm cho bộ lọc có giá trị thật. Thứ hai, viết câu hỏi đánh giá trước rồi mới soát lại corpus, để phát hiện sớm những câu có đáp án nằm rải ở nhiều mục như Q2. Thứ ba, chốt embedder trước khi so sánh chiến lược chunking, vì thứ tự ngược lại khiến nhóm suýt kết luận sai từ bảng điểm chạy trên mock embedder.
@@ -266,24 +347,33 @@ Trường hợp lỗi rõ nhất là **Q4**, câu duy nhất không chiến lư�
 
 Chuẩn bị trước: `pip install -r requirements-local.txt` và chạy thử một lần để mô hình nhúng đã nằm sẵn trong cache, tránh tải model giữa buổi trình bày.
 
-| Phút | Nội dung | Lệnh chạy trực tiếp | Điều cần chỉ ra trên màn hình |
-|---|---|---|---|
-| 0:00–0:45 | Corpus và lý do chọn chủ đề | `cat data/university/sources.csv` | 10 tài liệu, mỗi dòng có `source_url`, `retrieved_at`, `document_version`; nói rõ đây là dữ liệu mẫu trên `example.edu` |
-| 0:45–1:30 | Vì sao `audience` là metadata có ích | `head -20 data/university/muon-tai-lieu-sinh-vien.md data/university/muon-tai-lieu-giang-vien.md` | Hai tài liệu gần như đồng nghĩa, chỉ khác 5 cuốn/14 ngày và 15 cuốn/60 ngày |
-| 1:30–3:00 | Bảng so sánh 4 chiến lược chunking | `EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --compare` | Bốn chiến lược chỉ chênh nhau 1 điểm; `heading2` đạt 8/10 với 30 chunk, ít hơn `sentence` 17 chunk cho cùng số điểm |
-| 3:00–4:15 | Hai thí nghiệm đối chứng | `EMBEDDING_PROVIDER=local python scripts/ablation.py` | Thí nghiệm A: không lọc thì tài liệu giảng viên đứng thứ hai, chỉ kém 0,023. Thí nghiệm B: gộp mục ngắn đưa Q3 từ 1 lên 2 và giảm 23% số chunk |
-| 4:15–5:00 | Ba bài học và câu hỏi mở cho lớp | không cần chạy lệnh | Ba gạch đầu dòng ở đầu mục 4; đặt câu hỏi cho nhóm khác: corpus của các bạn có cặp tài liệu nào chỉ khác nhau ở đối tượng không? |
+| Phút | Người trình bày | Nội dung | Lệnh chạy trực tiếp | Điều cần chỉ ra trên màn hình |
+|---|---|---|---|---|
+| 0:00–0:45 | Bùi Đức Thông | Corpus và lý do chọn chủ đề | `cat data/university/sources.csv` | 10 tài liệu, mỗi dòng có `source_url`, `retrieved_at`, `document_version`; nói rõ đây là dữ liệu mẫu trên `example.edu` |
+| 0:45–1:30 | Đỗ Phúc Hưng | Vì sao `audience` là metadata có ích | `head -20 data/university/muon-tai-lieu-sinh-vien.md data/university/muon-tai-lieu-giang-vien.md` | Hai tài liệu gần như đồng nghĩa, chỉ khác 5 cuốn/14 ngày và 15 cuốn/60 ngày |
+| 1:30–3:00 | Đinh Công Tú | Bảng so sánh 4 chiến lược chunking | `EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --compare` | Bốn chiến lược chỉ chênh nhau 1 điểm; `heading2` đạt 8/10 với 30 chunk, ít hơn `sentence` 17 chunk cho cùng số điểm |
+| 3:00–4:15 | Bùi Đức Vinh | Hai thí nghiệm đối chứng | `EMBEDDING_PROVIDER=local python scripts/ablation.py` | Thí nghiệm A: không lọc thì tài liệu giảng viên đứng thứ hai, chỉ kém 0,023. Thí nghiệm B: gộp mục ngắn đưa Q3 từ 1 lên 2 và giảm 23% số chunk |
+| 4:15–5:00 | Bùi Đức Vinh | Ba bài học và câu hỏi mở cho lớp | không cần chạy lệnh | Ba gạch đầu dòng ở đầu mục 4; đặt câu hỏi cho nhóm khác: corpus của các bạn có cặp tài liệu nào chỉ khác nhau ở đối tượng không? |
 
 **Phương án dự phòng nếu máy không chạy được embedder thật:** chạy `python scripts/run_benchmark.py --compare` với embedder giả lập, chiếu bảng điểm 1–3/10, rồi đối chiếu với bảng ở mục 2.3. Bản thân sự chênh lệch đó chính là phát hiện số 1 của nhóm, nên phương án dự phòng vẫn trình bày được đúng thông điệp.
+
+**Ai trả lời câu hỏi nào khi lớp chất vấn.** Nguyên tắc: người sở hữu phần việc trả lời phần việc đó, nhóm trưởng chỉ đỡ những câu không rơi vào ai.
+
+| Chủ đề câu hỏi | Người trả lời chính |
+|---|---|
+| Nguồn dữ liệu, giấy phép, vì sao dùng dữ liệu mẫu | Bùi Đức Thông |
+| Thiết kế metadata, bộ lọc `audience`, đánh đổi độ thu hồi | Đỗ Phúc Hưng |
+| Cách soạn 5 câu benchmark, cách chấm 2/1/0, `gold_keywords` | Đinh Công Tú |
+| Mã nguồn `src/`, `HeadingChunkerV2`, so sánh embedder | Bùi Đức Vinh |
 
 **Câu hỏi nhóm dự kiến bị hỏi, và câu trả lời đã chuẩn bị:**
 
 | Câu hỏi có thể bị hỏi | Trả lời |
 |---|---|
-| Vì sao chỉ 5 câu benchmark, có quá ít để kết luận không? | Có, 5 câu là mức tối thiểu theo yêu cầu lab. Nhóm không kết luận chiến lược nào thắng tuyệt đối, chỉ kết luận rằng khoảng cách giữa các chiến lược nhỏ hơn khoảng cách giữa các embedder, và kết luận này đứng vững vì khoảng cách đó là 5–7 điểm chứ không phải 1 điểm. |
-| Vì sao không dùng ChromaDB để xếp hạng? | `EmbeddingStore` vẫn mirror sang ChromaDB khi thư viện có mặt, nhưng việc xếp hạng làm tại chỗ bằng tích vô hướng để kết quả tái lập được y hệt trên mọi máy, kể cả máy không cài Chroma. |
-| Bộ lọc metadata không tăng điểm thì giữ làm gì? | Vì nó chống lỗi chứ không tăng điểm. Không lọc thì tài liệu giảng viên đứng thứ hai với khoảng cách 0,023; chỉ cần đổi cách diễn đạt câu hỏi là thứ tự có thể đảo và agent sẽ trả lời sinh viên rằng họ được mượn 15 cuốn. |
-| Nếu thay corpus mẫu bằng quy định thật thì bảng số có còn đúng không? | Không đảm bảo, và nhóm nói rõ điều đó. Hai lệnh ở đầu báo cáo sẽ sinh lại toàn bộ bảng số; cấu trúc front matter và bộ câu hỏi giữ nguyên, chỉ cần cập nhật `gold` và `gold_keywords` cho khớp văn bản mới. |
+| Vì sao chỉ 5 câu benchmark, có quá ít để kết luận không? *(Đinh Công Tú)* | Có, 5 câu là mức tối thiểu theo yêu cầu lab. Nhóm không kết luận chiến lược nào thắng tuyệt đối, chỉ kết luận rằng khoảng cách giữa các chiến lược nhỏ hơn khoảng cách giữa các embedder, và kết luận này đứng vững vì khoảng cách đó là 5–7 điểm chứ không phải 1 điểm. |
+| Vì sao không dùng ChromaDB để xếp hạng? *(Bùi Đức Vinh)* | `EmbeddingStore` vẫn mirror sang ChromaDB khi thư viện có mặt, nhưng việc xếp hạng làm tại chỗ bằng tích vô hướng để kết quả tái lập được y hệt trên mọi máy, kể cả máy không cài Chroma. |
+| Bộ lọc metadata không tăng điểm thì giữ làm gì? *(Đỗ Phúc Hưng)* | Vì nó chống lỗi chứ không tăng điểm. Không lọc thì tài liệu giảng viên đứng thứ hai với khoảng cách 0,023; chỉ cần đổi cách diễn đạt câu hỏi là thứ tự có thể đảo và agent sẽ trả lời sinh viên rằng họ được mượn 15 cuốn. |
+| Nếu thay corpus mẫu bằng quy định thật thì bảng số có còn đúng không? *(Bùi Đức Thông)* | Không đảm bảo, và nhóm nói rõ điều đó. Hai lệnh ở đầu báo cáo sẽ sinh lại toàn bộ bảng số; cấu trúc front matter và bộ câu hỏi giữ nguyên, chỉ cần cập nhật `gold` và `gold_keywords` cho khớp văn bản mới. |
 
 ---
 
