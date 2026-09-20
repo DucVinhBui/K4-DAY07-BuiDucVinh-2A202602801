@@ -262,6 +262,29 @@ Trường hợp lỗi rõ nhất là **Q4**, câu duy nhất không chiến lư�
 **Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu?**
 > Thứ nhất, tách tài liệu theo đối tượng ngay từ lúc thu thập thay vì để một trang gộp nhiều đối tượng, vì đây là thứ làm cho bộ lọc có giá trị thật. Thứ hai, viết câu hỏi đánh giá trước rồi mới soát lại corpus, để phát hiện sớm những câu có đáp án nằm rải ở nhiều mục như Q2. Thứ ba, chốt embedder trước khi so sánh chiến lược chunking, vì thứ tự ngược lại khiến nhóm suýt kết luận sai từ bảng điểm chạy trên mock embedder.
 
+**Kịch bản demo 5 phút (nhóm chạy trực tiếp trên máy).**
+
+Chuẩn bị trước: `pip install -r requirements-local.txt` và chạy thử một lần để mô hình nhúng đã nằm sẵn trong cache, tránh tải model giữa buổi trình bày.
+
+| Phút | Nội dung | Lệnh chạy trực tiếp | Điều cần chỉ ra trên màn hình |
+|---|---|---|---|
+| 0:00–0:45 | Corpus và lý do chọn chủ đề | `cat data/university/sources.csv` | 10 tài liệu, mỗi dòng có `source_url`, `retrieved_at`, `document_version`; nói rõ đây là dữ liệu mẫu trên `example.edu` |
+| 0:45–1:30 | Vì sao `audience` là metadata có ích | `head -20 data/university/muon-tai-lieu-sinh-vien.md data/university/muon-tai-lieu-giang-vien.md` | Hai tài liệu gần như đồng nghĩa, chỉ khác 5 cuốn/14 ngày và 15 cuốn/60 ngày |
+| 1:30–3:00 | Bảng so sánh 4 chiến lược chunking | `EMBEDDING_PROVIDER=local python scripts/run_benchmark.py --compare` | Bốn chiến lược chỉ chênh nhau 1 điểm; `heading2` đạt 8/10 với 30 chunk, ít hơn `sentence` 17 chunk cho cùng số điểm |
+| 3:00–4:15 | Hai thí nghiệm đối chứng | `EMBEDDING_PROVIDER=local python scripts/ablation.py` | Thí nghiệm A: không lọc thì tài liệu giảng viên đứng thứ hai, chỉ kém 0,023. Thí nghiệm B: gộp mục ngắn đưa Q3 từ 1 lên 2 và giảm 23% số chunk |
+| 4:15–5:00 | Ba bài học và câu hỏi mở cho lớp | không cần chạy lệnh | Ba gạch đầu dòng ở đầu mục 4; đặt câu hỏi cho nhóm khác: corpus của các bạn có cặp tài liệu nào chỉ khác nhau ở đối tượng không? |
+
+**Phương án dự phòng nếu máy không chạy được embedder thật:** chạy `python scripts/run_benchmark.py --compare` với embedder giả lập, chiếu bảng điểm 1–3/10, rồi đối chiếu với bảng ở mục 2.3. Bản thân sự chênh lệch đó chính là phát hiện số 1 của nhóm, nên phương án dự phòng vẫn trình bày được đúng thông điệp.
+
+**Câu hỏi nhóm dự kiến bị hỏi, và câu trả lời đã chuẩn bị:**
+
+| Câu hỏi có thể bị hỏi | Trả lời |
+|---|---|
+| Vì sao chỉ 5 câu benchmark, có quá ít để kết luận không? | Có, 5 câu là mức tối thiểu theo yêu cầu lab. Nhóm không kết luận chiến lược nào thắng tuyệt đối, chỉ kết luận rằng khoảng cách giữa các chiến lược nhỏ hơn khoảng cách giữa các embedder, và kết luận này đứng vững vì khoảng cách đó là 5–7 điểm chứ không phải 1 điểm. |
+| Vì sao không dùng ChromaDB để xếp hạng? | `EmbeddingStore` vẫn mirror sang ChromaDB khi thư viện có mặt, nhưng việc xếp hạng làm tại chỗ bằng tích vô hướng để kết quả tái lập được y hệt trên mọi máy, kể cả máy không cài Chroma. |
+| Bộ lọc metadata không tăng điểm thì giữ làm gì? | Vì nó chống lỗi chứ không tăng điểm. Không lọc thì tài liệu giảng viên đứng thứ hai với khoảng cách 0,023; chỉ cần đổi cách diễn đạt câu hỏi là thứ tự có thể đảo và agent sẽ trả lời sinh viên rằng họ được mượn 15 cuốn. |
+| Nếu thay corpus mẫu bằng quy định thật thì bảng số có còn đúng không? | Không đảm bảo, và nhóm nói rõ điều đó. Hai lệnh ở đầu báo cáo sẽ sinh lại toàn bộ bảng số; cấu trúc front matter và bộ câu hỏi giữ nguyên, chỉ cần cập nhật `gold` và `gold_keywords` cho khớp văn bản mới. |
+
 ---
 
 ## Tự Đánh Giá (Phần Nhóm)
@@ -271,5 +294,7 @@ Trường hợp lỗi rõ nhất là **Q4**, câu duy nhất không chiến lư�
 | Lựa chọn tài liệu (Document Set Quality) | 8 / 10 — đủ 10 tài liệu, metadata đầy đủ và có 3 giá trị `audience`, nhưng là dữ liệu mẫu tự soạn chứ chưa phải nguồn công khai thật |
 | Thiết kế chiến lược (Strategy Design) | 14 / 15 — 4 chiến lược, có chiến lược riêng theo heading, có chẩn đoán lỗi và cải tiến đã kiểm chứng bằng số |
 | Chất lượng truy xuất (Retrieval Quality) | 8 / 10 — 5/5 câu có chunk vàng ở top-1, 2 câu bị trừ vì chunk thiếu dữ kiện |
-| Thuyết trình (Demo) | / 5 — chấm sau buổi trình bày |
-| **Tổng phần nhóm** | **30 / 35 điểm đã chấm được** |
+| Thuyết trình (Demo) | 4 / 5 (tự đánh giá trước buổi trình bày) — đã có kịch bản 5 phút, lệnh chạy trực tiếp và phương án dự phòng; trừ 1 điểm vì chưa chạy thử trước lớp |
+| **Tổng phần nhóm** | **34 / 40** |
+
+> Điểm Demo ở trên là dự kiến. Sau buổi trình bày, nhóm cập nhật lại con số này cùng một dòng ghi nhận phản hồi của lớp và của giảng viên.
